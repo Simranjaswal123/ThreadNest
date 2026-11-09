@@ -1,0 +1,26 @@
+# Runs PostgreSQL for local development. Start it with: docker compose up -d
+services:
+  db:
+    image: postgres:16
+    container_name: threadnest-db
+    restart: unless-stopped
+    # Values come from the .env file next to this file.
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      # host port : container port. Postgres always uses 5432 inside the container.
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      # Keeps the data when the container is stopped or recreated.
+      - threadnest_data:/var/lib/postgresql/data
+    healthcheck:
+      # Reports "healthy" once Postgres accepts connections.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  threadnest_data:
