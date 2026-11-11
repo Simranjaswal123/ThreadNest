@@ -2,6 +2,7 @@
 import bcrypt from 'bcryptjs';
 import { categories } from './seedData.js';
 import { addProducts } from './seedProducts.js';
+import { addSampleOrders } from './seedOrders.js';
 
 // Dummy password for the two demo accounts. Never use it for anything real.
 export const DEMO_PASSWORD = 'Password123!';
@@ -34,7 +35,8 @@ async function addCategories(client) {
 }
 
 // Takes an open database client so that tests can reuse it.
-export async function seedDatabase(client) {
+// Sample orders are only added when asked, so that tests start from a clean shop.
+export async function seedDatabase(client, withSampleOrders = false) {
   try {
     // One transaction: if anything fails, the old data is kept.
     await client.query('BEGIN');
@@ -42,6 +44,9 @@ export async function seedDatabase(client) {
     await addUsers(client);
     const categoryIds = await addCategories(client);
     await addProducts(client, categoryIds);
+    if (withSampleOrders) {
+      await addSampleOrders(client);
+    }
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');
