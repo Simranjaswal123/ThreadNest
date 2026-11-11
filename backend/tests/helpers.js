@@ -5,11 +5,12 @@ import request from 'supertest';
 import { seedDatabase, DEMO_PASSWORD } from '../src/db/seed.js';
 
 // Puts the test database back to the clean demo data.
-export async function resetDatabase() {
+// Pass true to also add the 8 sample orders (used by the reports tests).
+export async function resetDatabase(withSampleOrders = false) {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
-    await seedDatabase(client);
+    await seedDatabase(client, withSampleOrders);
   } finally {
     await client.end();
   }
