@@ -9,6 +9,7 @@ import authRoutes from './modules/auth/auth.routes.js';
 import catalogRoutes from './modules/catalog/catalog.routes.js';
 import cartRoutes from './modules/cart/cart.routes.js';
 import addressRoutes from './modules/addresses/address.routes.js';
+import { checkoutRouter, ordersRouter } from './modules/orders/orders.routes.js';
 
 // app.js only builds the Express app. server.js starts listening.
 // Keeping them apart lets the tests use the app without opening a port.
@@ -33,6 +34,8 @@ app.use('/api', authRoutes);
 app.use('/api', catalogRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/addresses', addressRoutes);
+app.use('/api/checkout', checkoutRouter);
+app.use('/api/orders', ordersRouter);
 
 // These two must stay last: first "no route matched", then "something went wrong".
 app.use('/api', notFoundHandler);
