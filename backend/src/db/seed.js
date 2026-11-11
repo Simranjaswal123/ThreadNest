@@ -1,11 +1,10 @@
 // Fills the database with demo data. Safe to run again: it clears old data first.
 import bcrypt from 'bcryptjs';
-import pg from 'pg';
 import { categories } from './seedData.js';
 import { addProducts } from './seedProducts.js';
 
 // Dummy password for the two demo accounts. Never use it for anything real.
-const DEMO_PASSWORD = 'Password123!';
+export const DEMO_PASSWORD = 'Password123!';
 
 async function clearData(client) {
   // CASCADE also empties every table that points at these two (orders, cart, and so on).
@@ -26,16 +25,16 @@ async function addUsers(client) {
 async function addCategories(client) {
   const ids = {};
   for (const name of categories) {
-    const result = await client.query('INSERT INTO categories (name) VALUES ($1) RETURNING id', [name]);
+    const slug = name.toLowerCase().replace(/ /g, '-');
+    const sql = 'INSERT INTO categories (name, slug) VALUES ($1, $2) RETURNING id';
+    const result = await client.query(sql, [name, slug]);
     ids[name] = result.rows[0].id;
   }
   return ids;
 }
 
-async function runSeed() {
-  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
-  await client.connect();
-
+// Takes an open database client so that tests can reuse it.
+export async function seedDatabase(client) {
   try {
     // One transaction: if anything fails, the old data is kept.
     await client.query('BEGIN');
@@ -44,16 +43,8 @@ async function runSeed() {
     const categoryIds = await addCategories(client);
     await addProducts(client, categoryIds);
     await client.query('COMMIT');
-    console.log('Seed finished.');
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
-  } finally {
-    await client.end();
   }
 }
-
-runSeed().catch((error) => {
-  console.error('Seed failed: ' + error.message);
-  process.exit(1);
-});
