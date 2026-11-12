@@ -3,6 +3,8 @@ import { Link, Navigate, useLocation } from 'react-router-dom';
 import { errorText } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
+const inputClass = 'w-full rounded-md border border-slate-400 px-3 py-2 shadow-inner focus:border-link';
+
 export default function LoginPage() {
   const { user, loading, login } = useAuth();
   const location = useLocation();
@@ -37,37 +39,49 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md rounded-lg bg-white p-6 shadow">
-      <h1 className="mb-4 text-2xl font-bold">Log in</h1>
+    <div className="mx-auto max-w-sm py-4">
+      <div className="rounded-lg border border-slate-300 bg-white p-6 shadow-sm">
+        <h1 className="mb-1 text-3xl font-normal">Sign in</h1>
+        <p className="mb-4 text-sm text-slate-600">Welcome back. Your bag and orders are waiting.</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
-          <input id="email" type="email" required autoComplete="email" value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded border border-slate-400 px-3 py-2" />
-        </div>
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium">Password</label>
-          <input id="password" type="password" required autoComplete="current-password" value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded border border-slate-400 px-3 py-2" />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="mb-1 block text-sm font-bold">Email</label>
+            <input id="email" type="email" required autoComplete="email" value={email}
+              onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label htmlFor="password" className="mb-1 block text-sm font-bold">Password</label>
+            <input id="password" type="password" required autoComplete="current-password" value={password}
+              onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+          </div>
 
-        {/* aria-live makes screen readers announce the error when it appears */}
-        <div aria-live="polite">
-          {error && <p className="rounded bg-red-50 p-2 text-sm text-red-800">{error}</p>}
-        </div>
+          {/* aria-live makes screen readers announce the error when it appears */}
+          <div aria-live="polite">
+            {error && (
+              <p className="rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-800">
+                <b>There was a problem.</b> {error}
+              </p>
+            )}
+          </div>
 
-        <button type="submit" disabled={submitting}
-          className="w-full rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-          {submitting ? 'Logging in...' : 'Log in'}
-        </button>
-      </form>
+          <button type="submit" disabled={submitting}
+            className="w-full rounded-full bg-cta px-4 py-2 text-sm font-medium text-ink shadow-sm hover:bg-cta-hover disabled:opacity-50">
+            {submitting ? 'Signing in...' : 'Sign in'}
+          </button>
+        </form>
+      </div>
 
-      <p className="mt-4 text-sm">
-        New here? <Link to="/register" className="text-indigo-700 underline">Create an account</Link>
-      </p>
+      <div className="my-5 flex items-center gap-3 text-xs text-slate-600">
+        <span className="h-px flex-1 bg-slate-300" />
+        New to Threadnest?
+        <span className="h-px flex-1 bg-slate-300" />
+      </div>
+
+      <Link to="/register"
+        className="block w-full rounded-full border border-slate-300 bg-white px-4 py-2 text-center text-sm shadow-sm hover:bg-slate-50">
+        Create your Threadnest account
+      </Link>
     </div>
   );
 }
