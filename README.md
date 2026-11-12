@@ -70,7 +70,7 @@ ThreadNest/
 
 ## Setup
 
-You need Node.js 20.6 or newer (it was built with 22), npm and Docker.
+You need Node.js 22.9 or newer, npm and Docker.
 
 ```bash
 # 1. Settings. On Windows PowerShell use: copy .env.example .env
@@ -107,7 +107,8 @@ Express then serves the built React app and the API on http://localhost:3000.
 ## Environment variables
 
 All of them are in `.env` in the project root (copy `.env.example`). The backend loads that file with
-`node --env-file=../.env`. Never commit `.env`.
+`node --env-file-if-exists=../.env` (on a server without the file, the real environment variables are used).
+Never commit `.env`.
 
 | Variable | Used by | Meaning |
 |---|---|---|
