@@ -5,6 +5,8 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yaml';
 import { config } from './config/env.js';
 import { pool } from './db/pool.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
@@ -18,6 +20,13 @@ import adminRoutes from './modules/admin/admin.routes.js';
 // app.js only builds the Express app. server.js starts listening.
 // Keeping them apart lets the tests use the app without opening a port.
 export const app = express();
+
+// The API documentation page, made from backend/openapi.yaml.
+// It is mounted BEFORE helmet because the Swagger page needs inline scripts that helmet's strict
+// content policy would block. Every other route is still covered by helmet below.
+const openApiFile = fileURLToPath(new URL('../openapi.yaml', import.meta.url));
+const openApiDocument = YAML.parse(fs.readFileSync(openApiFile, 'utf8'));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 // Middleware runs top to bottom for every request.
 
