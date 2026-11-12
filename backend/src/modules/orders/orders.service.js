@@ -34,6 +34,39 @@ function formatAddress(address) {
   return parts.filter(Boolean).join('\n');
 }
 
+// Adds up the cart. Prices come from the database now, not from the browser.
+function priceTheCart(lines) {
+  let subtotal = 0;
+  for (const line of lines) {
+    if (!line.is_active) {
+      throw new AppError(409, 'PRODUCT_UNAVAILABLE', line.product_name + ' is no longer available', {
+        variantId: line.variant_id,
+      });
+    }
+    subtotal = subtotal + line.price_cents * line.quantity;
+  }
+  return calculateTotals(subtotal);
+}
+
+// Rule 1: take the stock, line by line, in variant_id order. Always the same order, so
+// two checkouts can never wait for each other in a circle (a deadlock).
+async function takeStockAndAddItems(client, userId, orderId, lines) {
+  lines.sort((a, b) => a.variant_id - b.variant_id);
+
+  for (const line of lines) {
+    const taken = await decreaseStock(client, line.variant_id, line.quantity);
+    if (!taken) {
+      // Throwing rolls back everything, including the order row inserted before.
+      throw new AppError(409, 'OUT_OF_STOCK', 'Not enough stock for ' + line.product_name, {
+        variantId: line.variant_id,
+        sku: line.sku,
+      });
+    }
+    await insertOrderItem(client, orderId, line);
+    await insertStockMovement(client, line.variant_id, -line.quantity, 'order_placed', orderId, userId);
+  }
+}
+
 // Everything in here runs in ONE transaction. If any step throws, nothing is saved.
 async function createOrder(client, userId, idempotencyKey, address) {
   // Read the cart inside the transaction, so the order matches what is really in it.
@@ -48,17 +81,7 @@ async function createOrder(client, userId, idempotencyKey, address) {
     throw new AppError(400, 'CART_EMPTY', 'Your cart is empty');
   }
 
-  // Prices come from the database now, not from the browser.
-  let subtotal = 0;
-  for (const line of lines) {
-    if (!line.is_active) {
-      throw new AppError(409, 'PRODUCT_UNAVAILABLE', line.product_name + ' is no longer available', {
-        variantId: line.variant_id,
-      });
-    }
-    subtotal = subtotal + line.price_cents * line.quantity;
-  }
-  const totals = calculateTotals(subtotal);
+  const totals = priceTheCart(lines);
 
   // Rule 2: insert the order FIRST. If this key was already used, we get no id back,
   // do nothing else, and return the order that already exists.
@@ -68,21 +91,7 @@ async function createOrder(client, userId, idempotencyKey, address) {
     return { orderId: existingId, created: false };
   }
 
-  // Rule 1: take the stock, line by line, in variant_id order. Always the same order, so
-  // two checkouts can never wait for each other in a circle (a deadlock).
-  lines.sort((a, b) => a.variant_id - b.variant_id);
-  for (const line of lines) {
-    const taken = await decreaseStock(client, line.variant_id, line.quantity);
-    if (!taken) {
-      // Throwing rolls back everything, including the order row inserted above.
-      throw new AppError(409, 'OUT_OF_STOCK', 'Not enough stock for ' + line.product_name, {
-        variantId: line.variant_id,
-        sku: line.sku,
-      });
-    }
-    await insertOrderItem(client, orderId, line);
-    await insertStockMovement(client, line.variant_id, -line.quantity, 'order_placed', orderId, userId);
-  }
+  await takeStockAndAddItems(client, userId, orderId, lines);
 
   await insertStatusHistory(client, orderId, null, 'placed', userId);
   const details = { total_cents: totals.total_cents, line_count: lines.length };
