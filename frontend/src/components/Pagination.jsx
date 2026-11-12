@@ -1,19 +1,29 @@
-// Previous / next buttons for a list. Hidden when there is only one page.
+// Previous, page numbers and next. Hidden when there is only one page.
 export default function Pagination({ page, totalPages, onChange }) {
   if (totalPages <= 1) {
     return null;
   }
 
-  const buttonClass = 'rounded border border-slate-500 px-3 py-1 hover:bg-slate-100 disabled:opacity-40';
+  const numbers = [];
+  for (let n = 1; n <= totalPages; n++) {
+    numbers.push(n);
+  }
+
+  const buttonClass = 'min-w-9 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-40';
 
   return (
-    <nav aria-label="Pages" className="mt-6 flex items-center justify-center gap-4">
+    <nav aria-label="Pages" className="mt-8 flex flex-wrap items-center justify-center gap-2">
       <button onClick={() => onChange(page - 1)} disabled={page <= 1} className={buttonClass}>
-        Previous
+        ‹ Previous
       </button>
-      <span aria-live="polite">Page {page} of {totalPages}</span>
+      {numbers.map((n) => (
+        <button key={n} onClick={() => onChange(n)} aria-current={n === page ? 'page' : undefined}
+          className={n === page ? buttonClass + ' border-slate-900 font-bold' : buttonClass}>
+          {n}
+        </button>
+      ))}
       <button onClick={() => onChange(page + 1)} disabled={page >= totalPages} className={buttonClass}>
-        Next
+        Next ›
       </button>
     </nav>
   );
