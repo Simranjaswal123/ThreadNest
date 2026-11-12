@@ -11,7 +11,9 @@ export default function RequireLogin({ children }) {
     return <p role="status">Loading...</p>;
   }
   if (!user) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    // Remember the whole address (with the filters), so login can send the visitor back to it.
+    const wantedPage = location.pathname + location.search;
+    return <Navigate to="/login" state={{ from: wantedPage }} replace />;
   }
   return children;
 }

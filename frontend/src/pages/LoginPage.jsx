@@ -1,18 +1,17 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { errorText } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function LoginPage() {
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading, login } = useAuth();
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // RequireAdmin and checkout send people here and remember where they wanted to go.
+  // RequireLogin and RequireAdmin send people here and remember the page they wanted.
   const goTo = location.state && location.state.from ? location.state.from : '/';
 
   async function handleSubmit(event) {
@@ -20,13 +19,21 @@ export default function LoginPage() {
     setError('');
     setSubmitting(true);
     try {
+      // When the login works, "user" is set and the redirect below sends the visitor onwards.
       await login(email, password);
-      navigate(goTo, { replace: true });
     } catch (err) {
       setError(errorText(err));
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // Wait until we know whether a login cookie exists, then skip the form if it does.
+  if (loading) {
+    return <p role="status">Loading...</p>;
+  }
+  if (user) {
+    return <Navigate to={goTo} replace />;
   }
 
   return (

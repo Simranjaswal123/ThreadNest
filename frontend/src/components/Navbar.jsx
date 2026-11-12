@@ -31,8 +31,9 @@ export default function Navbar() {
         </Link>
 
         <div className="flex flex-wrap items-center gap-4 text-sm">
-          <Link to="/" className={linkClass}>Shop</Link>
-          <Link to="/cart" className={linkClass}>Cart</Link>
+          {/* Visitors who are not logged in only see Log in and Register. */}
+          {user && <Link to="/" className={linkClass}>Shop</Link>}
+          {user && <Link to="/cart" className={linkClass}>Cart</Link>}
           {user && <Link to="/orders" className={linkClass}>My orders</Link>}
           {user && user.role === 'admin' && <Link to="/admin" className={linkClass}>Admin</Link>}
 

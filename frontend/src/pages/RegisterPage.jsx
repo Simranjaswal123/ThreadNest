@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { errorText } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function RegisterPage() {
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading, register } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,13 +16,20 @@ export default function RegisterPage() {
     setError('');
     setSubmitting(true);
     try {
+      // The new customer is logged in, so "user" is set and the redirect below shows the shop.
       await register(fullName, email, password);
-      navigate('/');
     } catch (err) {
       setError(errorText(err));
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (loading) {
+    return <p role="status">Loading...</p>;
+  }
+  if (user) {
+    return <Navigate to="/" replace />;
   }
 
   return (

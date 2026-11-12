@@ -64,9 +64,10 @@ export default function App() {
       <Navbar />
       <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto max-w-6xl px-4 py-6">
         <Routes>
-          <Route path="/" element={<CatalogPage />} />
-          <Route path="/products/:id" element={<ProductPage />} />
-          <Route path="/cart" element={<CartPage />} />
+          {/* Visitors who are not logged in see the login page first, not the shop. */}
+          <Route path="/" element={<RequireLogin><CatalogPage /></RequireLogin>} />
+          <Route path="/products/:id" element={<RequireLogin><ProductPage /></RequireLogin>} />
+          <Route path="/cart" element={<RequireLogin><CartPage /></RequireLogin>} />
           <Route path="/checkout" element={<RequireLogin><CheckoutPage /></RequireLogin>} />
           <Route path="/orders" element={<RequireLogin><OrdersPage /></RequireLogin>} />
           <Route path="/orders/:id" element={<RequireLogin><OrderDetailPage /></RequireLogin>} />
