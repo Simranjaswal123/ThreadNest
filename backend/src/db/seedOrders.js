@@ -17,6 +17,7 @@ const sampleOrders = [
 ];
 
 // "n days ago, plus h hours": every row of one order gets a believable time.
+// $1 is the days and $2 is the hours in every query that uses it.
 const timeSql = 'NOW() - make_interval(days => $1::int) + make_interval(hours => $2::int)';
 
 async function findLines(client, items) {
@@ -32,47 +33,50 @@ async function findLines(client, items) {
   return lines;
 }
 
-async function addOneOrder(client, sample, number, customerId, adminId) {
-  const lines = await findLines(client, sample.items);
-  let subtotal = 0;
-  for (const line of lines) {
-    subtotal = subtotal + line.price_cents * line.quantity;
-  }
-  const totals = calculateTotals(subtotal);
+async function insertSampleOrder(client, sample, number, customerId, totals) {
   const finalStatus = sample.path[sample.path.length - 1];
-  const lastHour = sample.path.length - 1;
-
-  const orderSql = `
+  const sql = `
     INSERT INTO orders (user_id, shipping_address, status, subtotal_cents, shipping_cents, tax_cents,
                         total_cents, idempotency_key, created_at, updated_at)
-    VALUES ($3, $4, $5, $6, $7, $8, $9, $10, ${timeSql}, NOW() - make_interval(days => $1::int) + make_interval(hours => $11::int))
+    VALUES ($3, $4, $5, $6, $7, $8, $9, $10, ${timeSql},
+            NOW() - make_interval(days => $1::int) + make_interval(hours => $11::int))
     RETURNING id
   `;
   const address = 'Demo Customer\n12 Market Road\nPune 411001\nIndia';
-  const orderValues = [
+  const values = [
     sample.daysAgo, 0, customerId, address, finalStatus, totals.subtotal_cents, totals.shipping_cents,
-    totals.tax_cents, totals.total_cents, 'seed-order-' + number, lastHour,
+    totals.tax_cents, totals.total_cents, 'seed-order-' + number, sample.path.length - 1,
   ];
-  const orderId = (await client.query(orderSql, orderValues)).rows[0].id;
+  const result = await client.query(sql, values);
+  return result.rows[0].id;
+}
+
+// The items of the order, the stock they took and the ledger rows for it.
+async function addLinesAndStock(client, sample, orderId, lines, customerId, adminId) {
+  const cancelled = sample.path.includes('cancelled');
+  const lastHour = sample.path.length - 1;
+  const movement = `
+    INSERT INTO inventory_movements (variant_id, change_qty, reason, order_id, created_by, created_at)
+    VALUES ($3, $4, $5, $6, $7, ${timeSql})
+  `;
 
   for (const line of lines) {
-    await client.query(
-      'INSERT INTO order_items (order_id, variant_id, product_name, sku, unit_price_cents, quantity) VALUES ($1, $2, $3, $4, $5, $6)',
-      [orderId, line.variant_id, line.product_name, line.sku, line.price_cents, line.quantity]
-    );
+    const itemSql = `
+      INSERT INTO order_items (order_id, variant_id, product_name, sku, unit_price_cents, quantity)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `;
+    await client.query(itemSql, [orderId, line.variant_id, line.product_name, line.sku, line.price_cents, line.quantity]);
+
     // The sale takes the stock. A cancelled order gives it back (same as a real cancel).
-    const net = finalStatus === 'cancelled' ? 0 : line.quantity;
-    await client.query('UPDATE variants SET stock_qty = stock_qty - $1 WHERE id = $2', [net, line.variant_id]);
-    const movement = `INSERT INTO inventory_movements (variant_id, change_qty, reason, order_id, created_by, created_at)
-                      VALUES ($3, $4, $5, $6, $7, ${timeSql})`;
+    const taken = cancelled ? 0 : line.quantity;
+    await client.query('UPDATE variants SET stock_qty = stock_qty - $1 WHERE id = $2', [taken, line.variant_id]);
+
     await client.query(movement, [sample.daysAgo, 0, line.variant_id, -line.quantity, 'order_placed', orderId, customerId]);
-    if (finalStatus === 'cancelled') {
+    if (cancelled) {
       const back = [sample.daysAgo, lastHour, line.variant_id, line.quantity, 'order_cancelled', orderId, adminId];
       await client.query(movement, back);
     }
   }
-
-  await addHistoryPaymentsAndAudit(client, sample, orderId, totals.total_cents, customerId, adminId);
 }
 
 // One history row, one audit row per status, and a payment once the order is paid.
@@ -82,21 +86,41 @@ async function addHistoryPaymentsAndAudit(client, sample, orderId, totalCents, c
     const from = step === 0 ? null : sample.path[step - 1];
     const actor = ['packed', 'shipped', 'delivered'].includes(to) ? adminId : customerId;
 
-    const history = `INSERT INTO order_status_history (order_id, from_status, to_status, changed_by, created_at)
-                     VALUES ($3, $4, $5, $6, ${timeSql})`;
+    const history = `
+      INSERT INTO order_status_history (order_id, from_status, to_status, changed_by, created_at)
+      VALUES ($3, $4, $5, $6, ${timeSql})
+    `;
     await client.query(history, [sample.daysAgo, step, orderId, from, to, actor]);
 
-    const audit = `INSERT INTO audit_log (user_id, action, entity_type, entity_id, details, created_at)
-                   VALUES ($3, $4, 'order', $5, $6, ${timeSql})`;
+    const audit = `
+      INSERT INTO audit_log (user_id, action, entity_type, entity_id, details, created_at)
+      VALUES ($3, $4, 'order', $5, $6, ${timeSql})
+    `;
     const details = JSON.stringify({ from: from, to: to });
     await client.query(audit, [sample.daysAgo, step, actor, 'order.' + to, orderId, details]);
 
     if (to === 'paid') {
       const status = sample.path.includes('cancelled') ? 'refunded' : 'succeeded';
-      const payment = `INSERT INTO payments (order_id, amount_cents, status, created_at) VALUES ($3, $4, $5, ${timeSql})`;
+      const payment = `
+        INSERT INTO payments (order_id, amount_cents, status, created_at)
+        VALUES ($3, $4, $5, ${timeSql})
+      `;
       await client.query(payment, [sample.daysAgo, step, orderId, totalCents, status]);
     }
   }
+}
+
+async function addOneOrder(client, sample, number, customerId, adminId) {
+  const lines = await findLines(client, sample.items);
+  let subtotal = 0;
+  for (const line of lines) {
+    subtotal = subtotal + line.price_cents * line.quantity;
+  }
+  const totals = calculateTotals(subtotal);
+
+  const orderId = await insertSampleOrder(client, sample, number, customerId, totals);
+  await addLinesAndStock(client, sample, orderId, lines, customerId, adminId);
+  await addHistoryPaymentsAndAudit(client, sample, orderId, totals.total_cents, customerId, adminId);
 }
 
 export async function addSampleOrders(client) {
