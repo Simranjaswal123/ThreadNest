@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
 import RequireLogin from './components/RequireLogin.jsx';
 import RequireAdmin from './components/RequireAdmin.jsx';
 import AdminLayout from './components/AdminLayout.jsx';
@@ -56,13 +57,13 @@ export default function App() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-page text-slate-900">
       {/* The first thing a keyboard user can reach: a link past the menu. */}
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-10 focus:rounded focus:bg-white focus:px-3 focus:py-2">
         Skip to main content
       </a>
       <Navbar />
-      <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto max-w-6xl px-4 py-6">
+      <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
         <Routes>
           {/* Visitors who are not logged in see the login page first, not the shop. */}
           <Route path="/" element={<RequireLogin><CatalogPage /></RequireLogin>} />
@@ -85,6 +86,7 @@ export default function App() {
           </Route>
         </Routes>
       </main>
+      <Footer />
     </div>
   );
 }

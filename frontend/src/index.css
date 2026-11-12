@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
+/* The store colours. Tailwind turns every --color-* below into classes,
+   for example bg-ink, text-brand-strong or hover:bg-cta-hover. */
+@theme {
+  --color-ink: #131921;          /* top header */
+  --color-ink-light: #232f3e;    /* category bar and footer */
+  --color-ink-soft: #37475a;     /* "Back to top" bar */
+  --color-page: #eaeded;         /* page background */
+  --color-brand: #ff3f6c;        /* pink accent, for decoration only */
+  --color-brand-strong: #d6245f; /* pink buttons and pink text: readable on white */
+  --color-brand-deep: #b81d50;   /* pink buttons on hover */
+  --color-cta: #ffd814;          /* yellow "Add to Cart" */
+  --color-cta-hover: #f7ca00;
+  --color-buy: #ffa41c;          /* orange "Buy Now" and the search button */
+  --color-buy-hover: #fa8900;
+  --color-link: #007185;         /* text links */
+  --color-link-hover: #c7511f;
+  --font-sans: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 /* A clearly visible focus ring for keyboard users, on every page. */
 :focus-visible {
-  outline: 3px solid #4f46e5;
+  outline: 3px solid #c45500;
   outline-offset: 2px;
 }
 
