@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
 import RequireLogin from './components/RequireLogin.jsx';
 import RequireAdmin from './components/RequireAdmin.jsx';
@@ -18,12 +19,50 @@ import AdminOrdersPage from './pages/admin/AdminOrdersPage.jsx';
 import AdminCustomersPage from './pages/admin/AdminCustomersPage.jsx';
 import AdminAuditPage from './pages/admin/AdminAuditPage.jsx';
 
+// The browser tab title for each part of the site. The first match wins, so longer paths come first.
+const titles = [
+  ['/admin/products', 'Admin: products'],
+  ['/admin/orders', 'Admin: orders'],
+  ['/admin/customers', 'Admin: customers'],
+  ['/admin/audit', 'Admin: audit log'],
+  ['/admin', 'Admin: dashboard'],
+  ['/checkout', 'Checkout'],
+  ['/cart', 'Cart'],
+  ['/orders', 'My orders'],
+  ['/products/', 'Product'],
+  ['/login', 'Log in'],
+  ['/register', 'Register'],
+];
+
+function titleFor(pathname) {
+  for (const [start, title] of titles) {
+    if (pathname.startsWith(start)) {
+      return title + ' - Threadnest';
+    }
+  }
+  return 'Shop - Threadnest';
+}
+
 // All routes of the app live here.
 export default function App() {
+  const location = useLocation();
+  const mainRef = useRef(null);
+
+  // On every page change: update the tab title and move the keyboard focus to the page content,
+  // so keyboard and screen reader users start at the top of the new page.
+  useEffect(() => {
+    document.title = titleFor(location.pathname);
+    mainRef.current.focus({ preventScroll: true });
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
+      {/* The first thing a keyboard user can reach: a link past the menu. */}
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-10 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+        Skip to main content
+      </a>
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto max-w-6xl px-4 py-6 focus:outline-none">
         <Routes>
           <Route path="/" element={<CatalogPage />} />
           <Route path="/products/:id" element={<ProductPage />} />

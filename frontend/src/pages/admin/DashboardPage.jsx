@@ -58,7 +58,7 @@ export default function DashboardPage() {
             return (
               <li key={day.day} className="flex h-full flex-1 flex-col justify-end" role="img" aria-label={label} title={label}>
                 <div className="rounded-t bg-indigo-600" style={{ height: Math.max(height, 2) + '%' }} />
-                <span className="mt-1 text-center text-[10px] text-slate-600">{day.day.slice(8)}</span>
+                <span className="mt-1 text-center text-xs text-slate-700">{day.day.slice(8)}</span>
               </li>
             );
           })}
