@@ -385,8 +385,3 @@ current stock (checked in `cancel.test.js`).
   the layouts at 375, 768 and 1280 px were designed with Tailwind breakpoints but still need a manual check.
 - The admin order page shows no order details (items, address); it only lists orders and the legal next buttons.
 
-## AI assistance
-
-Claude Code (Anthropic's AI coding tool) generated most of the code in this repository under my direction: I set the
-requirements, the architecture and the rules, and I reviewed the result and I understand how it works. The tests
-check the behaviour described above. The details of what was generated and how it was checked are in my own notes.
