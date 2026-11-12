@@ -12,7 +12,7 @@ const links = [
 export default function AdminLayout() {
   function linkClass({ isActive }) {
     const base = 'rounded px-3 py-1 hover:bg-slate-200 ';
-    return base + (isActive ? 'bg-slate-900 text-white hover:bg-slate-800' : '');
+    return base + (isActive ? 'bg-ink text-white hover:bg-ink-light' : 'bg-white');
   }
 
   return (

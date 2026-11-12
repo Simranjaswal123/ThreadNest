@@ -80,7 +80,7 @@ export default function AdminOrdersPage() {
           <input id="q" name="q" value={form.q} onChange={handleChange} className={inputClass} />
         </div>
         <div className="flex items-end gap-2">
-          <button type="submit" className="rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700">Apply</button>
+          <button type="submit" className="rounded bg-brand-strong px-4 py-2 font-medium text-white hover:bg-brand-deep">Apply</button>
           <button type="button" onClick={() => { setForm(emptyFilters); setApplied(emptyFilters); setPage(1); }}
             className="rounded border border-slate-500 px-4 py-2 hover:bg-slate-100">Reset</button>
         </div>

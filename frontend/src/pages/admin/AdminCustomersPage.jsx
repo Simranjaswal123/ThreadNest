@@ -38,7 +38,7 @@ export default function AdminCustomersPage() {
           <input id="search" value={text} onChange={(e) => setText(e.target.value)}
             className="w-full rounded border border-slate-400 px-3 py-2" />
         </div>
-        <button type="submit" className="rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700">Search</button>
+        <button type="submit" className="rounded bg-brand-strong px-4 py-2 font-medium text-white hover:bg-brand-deep">Search</button>
       </form>
 
       {error && <p role="alert" className="rounded bg-red-50 p-3 text-red-900">{error}</p>}

@@ -4,7 +4,7 @@ import Pagination from '../../components/Pagination.jsx';
 import { formatMoney } from '../../format.js';
 
 const inputClass = 'w-full rounded border border-slate-400 px-3 py-2';
-const buttonClass = 'rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50';
+const buttonClass = 'rounded bg-brand-strong px-4 py-2 font-medium text-white hover:bg-brand-deep disabled:opacity-50';
 
 // People type rupees; the API wants paise.
 function toPaise(rupees) {
