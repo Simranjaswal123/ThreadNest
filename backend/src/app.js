@@ -21,6 +21,12 @@ import adminRoutes from './modules/admin/admin.routes.js';
 // Keeping them apart lets the tests use the app without opening a port.
 export const app = express();
 
+// On a host like Render the app sits behind one proxy. Trusting it lets Express see the
+// visitor's real IP, so the login rate limit counts each visitor separately.
+if (config.nodeEnv === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // The API documentation page, made from backend/openapi.yaml.
 // It is mounted BEFORE helmet because the Swagger page needs inline scripts that helmet's strict
 // content policy would block. Every other route is still covered by helmet below.
