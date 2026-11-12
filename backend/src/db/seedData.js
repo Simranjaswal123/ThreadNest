@@ -10,6 +10,17 @@ export const sizes = ['S', 'M', 'L', 'XL'];
 // Short colour codes used inside SKUs, like TN-TSH1-BLK-M.
 export const colorCodes = { Black: 'BLK', White: 'WHT', Navy: 'NVY', Grey: 'GRY', Olive: 'OLV', Sand: 'SND', Red: 'RED' };
 
+// Colours of the placeholder pictures (hex without #), picked by each product's first colour.
+export const imageColors = {
+  Black: { background: '2b2b2b', text: 'ffffff' },
+  White: { background: 'f5f5f6', text: '282c3f' },
+  Navy: { background: '1f2a44', text: 'ffffff' },
+  Grey: { background: 'b8bcc4', text: '282c3f' },
+  Olive: { background: '6b7f3a', text: 'ffffff' },
+  Sand: { background: 'e3d3b8', text: '282c3f' },
+  Red: { background: 'c62828', text: 'ffffff' },
+};
+
 // These variants get special stock so we can test "almost sold out" and "sold out".
 export const specialStock = { 'TN-TSH1-BLK-XL': 1, 'TN-HOD1-GRY-S': 1, 'TN-CAP1-BLK': 0 };
 

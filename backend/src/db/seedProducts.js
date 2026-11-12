@@ -1,5 +1,11 @@
 // Inserts the demo products and their variants. Called by seed.js.
-import { sizedCategories, sizes, colorCodes, specialStock, products } from './seedData.js';
+import { sizedCategories, sizes, colorCodes, specialStock, products, imageColors } from './seedData.js';
+
+// A tall placeholder picture (4:5, like clothing photos) in the product's first colour.
+function makeImageUrl(product) {
+  const colours = imageColors[product.colors[0]] || imageColors.Grey;
+  return 'https://placehold.co/600x750/' + colours.background + '/' + colours.text + '?text=' + encodeURIComponent(product.name);
+}
 
 // Sized categories get size x colour variants; the others get one variant per colour.
 function makeVariants(product) {
@@ -23,7 +29,7 @@ export async function addProducts(client, categoryIds) {
   let variantCount = 0;
 
   for (const product of products) {
-    const image = 'https://placehold.co/600x600?text=' + encodeURIComponent(product.name);
+    const image = makeImageUrl(product);
     const result = await client.query(
       'INSERT INTO products (category_id, name, description, image_url, price_cents) VALUES ($1, $2, $3, $4, $5) RETURNING id',
       [categoryIds[product.category], product.name, 'Everyday basics from Threadnest.', image, product.price_cents]
