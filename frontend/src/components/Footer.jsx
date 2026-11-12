@@ -36,7 +36,7 @@ export default function Footer() {
       </div>
 
       <div className="bg-ink py-4 text-center text-xs text-slate-300">
-        © 2026 Threadnest. A demo store built for an assessment.
+        © 2026 Threadnest.
       </div>
     </footer>
   );
