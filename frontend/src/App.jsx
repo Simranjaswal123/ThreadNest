@@ -62,7 +62,7 @@ export default function App() {
         Skip to main content
       </a>
       <Navbar />
-      <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto max-w-6xl px-4 py-6 focus:outline-none">
+      <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto max-w-6xl px-4 py-6">
         <Routes>
           <Route path="/" element={<CatalogPage />} />
           <Route path="/products/:id" element={<ProductPage />} />
