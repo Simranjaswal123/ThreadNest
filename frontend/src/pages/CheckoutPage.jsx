@@ -5,6 +5,9 @@ import AddressForm from '../components/AddressForm.jsx';
 import CardFields from '../components/CardFields.jsx';
 import { formatMoney } from '../format.js';
 
+const sectionClass = 'rounded-sm bg-white p-4 shadow-sm lg:p-6';
+const headingClass = 'mb-3 text-sm font-bold uppercase tracking-wide text-slate-900';
+
 export default function CheckoutPage() {
   const navigate = useNavigate();
 
@@ -71,78 +74,104 @@ export default function CheckoutPage() {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <p>
-        Your cart is empty. <Link to="/" className="text-indigo-700 underline">Browse the shop</Link>
-      </p>
+      <div className="rounded-sm bg-white p-10 text-center">
+        <p className="text-lg font-bold">Your cart is empty</p>
+        <Link to="/" className="mt-3 inline-block text-link underline hover:text-link-hover">Continue shopping</Link>
+      </div>
     );
   }
 
+  let itemCount = 0;
+  for (const item of cart.items) {
+    itemCount = itemCount + item.quantity;
+  }
+
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <div className="space-y-6 lg:col-span-2">
-        <h1 className="text-2xl font-bold">Checkout</h1>
+    <div>
+      {/* The steps of the checkout, like a progress line */}
+      <ol className="mb-6 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest text-slate-500" aria-label="Checkout steps">
+        <li>Bag</li>
+        <li aria-hidden="true" className="h-px w-10 border-t border-dashed border-slate-400" />
+        <li className="text-brand-strong" aria-current="step">Address &amp; payment</li>
+        <li aria-hidden="true" className="h-px w-10 border-t border-dashed border-slate-400" />
+        <li>Done</li>
+      </ol>
 
-        <section className="rounded-lg bg-white p-4 shadow" aria-labelledby="address-heading">
-          <h2 id="address-heading" className="mb-3 text-lg font-semibold">1. Shipping address</h2>
-          {addresses.length > 0 && (
-            <fieldset className="space-y-2">
-              <legend className="sr-only">Choose an address</legend>
-              {addresses.map((a) => (
-                <label key={a.id} className="flex cursor-pointer items-start gap-2 rounded border p-2">
-                  <input type="radio" name="address" value={a.id} checked={addressId === String(a.id)}
-                    onChange={(e) => setAddressId(e.target.value)} className="mt-1" />
-                  <span>
-                    {a.full_name}, {a.line1}{a.line2 ? ', ' + a.line2 : ''}, {a.city} {a.postal_code}, {a.country}
-                  </span>
-                </label>
-              ))}
-            </fieldset>
-          )}
-          {!showForm && (
-            <button onClick={() => setShowForm(true)} className="mt-3 text-indigo-700 underline">
-              Add a new address
-            </button>
-          )}
-          {showForm && (
-            <div className="mt-3">
-              <AddressForm onSaved={handleAddressSaved} />
-            </div>
-          )}
-        </section>
+      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+        <div className="space-y-4">
+          <h1 className="text-2xl font-semibold">Checkout</h1>
 
-        <section className="rounded-lg bg-white p-4 shadow" aria-labelledby="payment-heading">
-          <h2 id="payment-heading" className="mb-3 text-lg font-semibold">2. Payment (simulated)</h2>
-          <CardFields cardNumber={cardNumber} onChange={setCardNumber} />
-        </section>
-      </div>
+          <section className={sectionClass} aria-labelledby="address-heading">
+            <h2 id="address-heading" className={headingClass}>1. Delivery address</h2>
+            {addresses.length > 0 && (
+              <fieldset className="space-y-2">
+                <legend className="sr-only">Choose an address</legend>
+                {addresses.map((a) => (
+                  <label key={a.id}
+                    className={'flex cursor-pointer items-start gap-3 rounded-md border p-3 ' +
+                      (addressId === String(a.id) ? 'border-brand-strong bg-pink-50' : 'border-slate-300 hover:border-slate-500')}>
+                    <input type="radio" name="address" value={a.id} checked={addressId === String(a.id)}
+                      onChange={(e) => setAddressId(e.target.value)} className="mt-1 h-4 w-4 accent-brand-strong" />
+                    <span className="text-sm">
+                      <b>{a.full_name}</b>
+                      <br />
+                      {a.line1}{a.line2 ? ', ' + a.line2 : ''}, {a.city} {a.postal_code}, {a.country}
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
+            {!showForm && (
+              <button onClick={() => setShowForm(true)} className="mt-3 text-sm font-bold uppercase tracking-wide text-brand-strong hover:underline">
+                + Add a new address
+              </button>
+            )}
+            {showForm && (
+              <div className="mt-3 border-t border-slate-200 pt-3">
+                <AddressForm onSaved={handleAddressSaved} />
+              </div>
+            )}
+          </section>
 
-      <aside className="h-fit rounded-lg bg-white p-4 shadow">
-        <h2 className="mb-2 text-lg font-semibold">Order summary</h2>
-        <ul className="mb-3 space-y-1 text-sm">
-          {cart.items.map((item) => (
-            <li key={item.variant_id} className="flex justify-between gap-2">
-              <span>{item.product_name} × {item.quantity}</span>
-              <span>{formatMoney(item.line_total_cents)}</span>
-            </li>
-          ))}
-        </ul>
-        <dl className="space-y-1 border-t pt-2">
-          <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatMoney(cart.subtotal_cents)}</dd></div>
-          <div className="flex justify-between"><dt>Shipping</dt><dd>{cart.shipping_cents === 0 ? 'Free' : formatMoney(cart.shipping_cents)}</dd></div>
-          <div className="flex justify-between"><dt>Tax</dt><dd>{formatMoney(cart.tax_cents)}</dd></div>
-          <div className="flex justify-between border-t pt-2 text-lg font-bold"><dt>Total</dt><dd>{formatMoney(cart.total_cents)}</dd></div>
-        </dl>
-
-        <div aria-live="polite" className="mt-3">
-          {error && <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-800">{error}</p>}
+          <section className={sectionClass} aria-labelledby="payment-heading">
+            <h2 id="payment-heading" className={headingClass}>2. Payment (simulated)</h2>
+            <CardFields cardNumber={cardNumber} onChange={setCardNumber} />
+          </section>
         </div>
 
-        <button onClick={handlePlaceOrder} disabled={placing || !addressId}
-          className="mt-3 w-full rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-          {placing ? 'Placing your order...' : 'Place order and pay'}
-        </button>
-        {!addressId && <p className="mt-2 text-sm text-slate-600">Add an address to continue.</p>}
-      </aside>
+        <aside className="h-fit space-y-4 rounded-sm bg-white p-4 shadow-sm" aria-label="Price details">
+          <h2 className={headingClass}>Price details ({itemCount} items)</h2>
+          <ul className="space-y-2 text-sm">
+            {cart.items.map((item) => (
+              <li key={item.variant_id} className="flex justify-between gap-2">
+                <span className="text-slate-700">{item.product_name} × {item.quantity}</span>
+                <span>{formatMoney(item.line_total_cents)}</span>
+              </li>
+            ))}
+          </ul>
+          <dl className="space-y-1 border-t border-slate-200 pt-3 text-sm">
+            <div className="flex justify-between"><dt>Total items</dt><dd>{formatMoney(cart.subtotal_cents)}</dd></div>
+            <div className="flex justify-between">
+              <dt>Delivery</dt>
+              <dd>{cart.shipping_cents === 0 ? <span className="font-medium text-green-700">FREE</span> : formatMoney(cart.shipping_cents)}</dd>
+            </div>
+            <div className="flex justify-between"><dt>Tax</dt><dd>{formatMoney(cart.tax_cents)}</dd></div>
+            <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold">
+              <dt>Total amount</dt><dd>{formatMoney(cart.total_cents)}</dd>
+            </div>
+          </dl>
+
+          <div aria-live="polite">
+            {error && <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-800">{error}</p>}
+          </div>
+
+          <button onClick={handlePlaceOrder} disabled={placing || !addressId}
+            className="w-full rounded-md bg-brand-strong px-4 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50">
+            {placing ? 'Placing your order...' : 'Place order and pay'}
+          </button>
+          {!addressId && <p className="text-sm text-slate-600">Add an address to continue.</p>}
+        </aside>
+      </div>
     </div>
   );
 }
