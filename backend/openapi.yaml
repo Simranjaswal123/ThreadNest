@@ -76,6 +76,40 @@ paths:
       summary: Log out (clears the cookie)
       responses:
         '200': { description: Logged out }
+  /api/auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Ask for a password reset link
+      description: |
+        If the email has an account, a one-time reset link (valid for 30 minutes) is "emailed". This demo has no email
+        service, so the email is written to the server log. The answer is the same whether or not the email has an
+        account. Asking again switches off the older link. Rate limited like login.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [email], properties: { email: { type: string, format: email } } } } }
+      responses:
+        '200': { description: Always the same answer, content: { application/json: { schema: { type: object, properties: { ok: { type: boolean }, message: { type: string } } } } } }
+        '400': { $ref: '#/components/responses/Validation' }
+        '429': { description: Too many attempts }
+  /api/auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Set a new password with the token from the reset link
+      description: The token works only once and only for 30 minutes. Only a hash of it is stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string, description: 64 hexadecimal characters from the link }
+                password: { type: string, minLength: 8, maxLength: 72 }
+      responses:
+        '200': { description: The password was changed }
+        '400': { description: 'Invalid input, or the link is invalid, used or expired (code INVALID_RESET_LINK)' }
+        '429': { description: Too many attempts }
   /api/me:
     get:
       tags: [Auth]

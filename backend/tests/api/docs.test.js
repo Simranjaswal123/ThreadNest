@@ -16,6 +16,7 @@ afterAll(async () => {
 const endpoints = [
   'get /api/health',
   'post /api/auth/register', 'post /api/auth/login', 'post /api/auth/logout', 'get /api/me',
+  'post /api/auth/forgot-password', 'post /api/auth/reset-password',
   'get /api/categories', 'get /api/products', 'get /api/products/{id}',
   'get /api/cart', 'post /api/cart/items', 'patch /api/cart/items/{variantId}', 'delete /api/cart/items/{variantId}',
   'get /api/addresses', 'post /api/addresses', 'delete /api/addresses/{id}',
