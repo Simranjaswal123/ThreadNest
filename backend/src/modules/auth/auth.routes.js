@@ -1,6 +1,6 @@
 import express from 'express';
-import { registerSchema, loginSchema } from './auth.schema.js';
-import { registerUser, loginUser } from './auth.service.js';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from './auth.schema.js';
+import { registerUser, loginUser, requestPasswordReset, resetPassword } from './auth.service.js';
 import { authenticate } from '../../middleware/authenticate.js';
 import { loginLimiter } from '../../middleware/loginLimiter.js';
 import { COOKIE_NAME, cookieOptions, signToken } from '../../lib/token.js';
@@ -27,6 +27,20 @@ router.post('/auth/login', loginLimiter, async (req, res) => {
 
 router.post('/auth/logout', (req, res) => {
   res.clearCookie(COOKIE_NAME, cookieOptions);
+  res.json({ ok: true });
+});
+
+// Forgot password. Rate limited like login, so nobody can flood people with reset emails.
+router.post('/auth/forgot-password', loginLimiter, async (req, res) => {
+  const body = forgotPasswordSchema.parse(req.body);
+  await requestPasswordReset(body.email);
+  // The same answer whether or not the email has an account.
+  res.json({ ok: true, message: 'If an account exists for this email, a reset link has been sent.' });
+});
+
+router.post('/auth/reset-password', loginLimiter, async (req, res) => {
+  const body = resetPasswordSchema.parse(req.body);
+  await resetPassword(body.token, body.password);
   res.json({ ok: true });
 });
 

@@ -1,7 +1,18 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
-import { pool } from '../../db/pool.js';
+import { config } from '../../config/env.js';
+import { pool, runInTransaction } from '../../db/pool.js';
 import { AppError } from '../../lib/AppError.js';
-import { findUserByEmail, createUser } from './auth.repo.js';
+import { sendPasswordResetEmail } from '../../lib/mailer.js';
+import { recordAudit } from '../audit/audit.service.js';
+import {
+  findUserByEmail,
+  createUser,
+  insertResetToken,
+  useResetToken,
+  cancelResetTokens,
+  updatePassword,
+} from './auth.repo.js';
 
 export async function registerUser(email, password, fullName) {
   const existing = await findUserByEmail(pool, email);
@@ -36,4 +47,46 @@ export async function loginUser(email, password) {
 
   // Return only safe fields. The hash stays inside this function.
   return { id: user.id, email: user.email, full_name: user.full_name, role: user.role };
+}
+
+// ----- Forgot password -----
+
+// The database keeps only this hash of the token, never the token itself.
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+// Sends a reset link if the email has an account. The caller always answers the same way,
+// so nobody can use this form to find out which emails are registered.
+export async function requestPasswordReset(email) {
+  const user = await findUserByEmail(pool, email);
+  if (!user) {
+    return;
+  }
+
+  // 32 random bytes: impossible to guess.
+  const token = crypto.randomBytes(32).toString('hex');
+  await runInTransaction(async (client) => {
+    // Asking for a new link switches off any older one.
+    await cancelResetTokens(client, user.id);
+    await insertResetToken(client, user.id, hashToken(token));
+  });
+
+  const link = config.frontendOrigin + '/reset-password?token=' + token;
+  sendPasswordResetEmail(user.email, link);
+}
+
+// Sets a new password with the token from the link. The token works only once.
+export async function resetPassword(token, newPassword) {
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  await runInTransaction(async (client) => {
+    const userId = await useResetToken(client, hashToken(token));
+    if (!userId) {
+      throw new AppError(400, 'INVALID_RESET_LINK', 'This reset link is invalid or has expired. Please ask for a new one.');
+    }
+    await updatePassword(client, userId, passwordHash);
+    await cancelResetTokens(client, userId);
+    await recordAudit(client, userId, 'user.password_reset', 'user', userId, null);
+  });
 }
