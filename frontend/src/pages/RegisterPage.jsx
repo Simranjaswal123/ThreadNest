@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { errorText } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 const inputClass = 'w-full rounded-md border border-slate-400 px-3 py-2 shadow-inner focus:border-link';
 
@@ -53,8 +54,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <label htmlFor="password" className="mb-1 block text-sm font-bold">Password</label>
-            <input id="password" type="password" required minLength={8} autoComplete="new-password" value={password}
-              onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+            <PasswordInput id="password" minLength={8} autoComplete="new-password" value={password} onChange={setPassword} />
             <p className="mt-1 text-xs text-slate-600">At least 8 characters.</p>
           </div>
 

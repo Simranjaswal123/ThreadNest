@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { errorText } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 const inputClass = 'w-full rounded-md border border-slate-400 px-3 py-2 shadow-inner focus:border-link';
 
@@ -51,9 +52,13 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-bold">Password</label>
-            <input id="password" type="password" required autoComplete="current-password" value={password}
-              onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+            <div className="mb-1 flex items-center justify-between">
+              <label htmlFor="password" className="block text-sm font-bold">Password</label>
+              <Link to="/forgot-password" className="text-sm text-link hover:text-link-hover hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+            <PasswordInput id="password" autoComplete="current-password" value={password} onChange={setPassword} />
           </div>
 
           {/* aria-live makes screen readers announce the error when it appears */}
