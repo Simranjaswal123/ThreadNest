@@ -14,6 +14,8 @@ import OrdersPage from './pages/OrdersPage.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import DashboardPage from './pages/admin/DashboardPage.jsx';
 import AdminProductsPage from './pages/admin/AdminProductsPage.jsx';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage.jsx';
@@ -33,6 +35,8 @@ const titles = [
   ['/products/', 'Product'],
   ['/login', 'Log in'],
   ['/register', 'Register'],
+  ['/forgot-password', 'Forgot password'],
+  ['/reset-password', 'Set a new password'],
 ];
 
 function titleFor(pathname) {
@@ -75,6 +79,8 @@ export default function App() {
           <Route path="/orders/:id/confirmation" element={<RequireLogin><OrderConfirmationPage /></RequireLogin>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* The admin area. The guard is cosmetic: the API checks the role for real. */}
           <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
