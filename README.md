@@ -160,6 +160,7 @@ erDiagram
   users ||--o{ order_status_history : "changes status"
   users ||--o{ inventory_movements : "adjusts stock"
   users ||--o{ audit_log : "performs"
+  users ||--o{ password_reset_tokens : "resets password with"
   categories ||--o{ products : "contains"
   products ||--o{ variants : "has"
   variants ||--o{ cart_items : "is in"
@@ -267,6 +268,14 @@ erDiagram
     int created_by FK
     timestamp created_at
   }
+  password_reset_tokens {
+    int id PK
+    int user_id FK
+    varchar token_hash UK
+    timestamp expires_at
+    timestamp used_at
+    timestamp created_at
+  }
   audit_log {
     int id PK
     int user_id FK
@@ -283,7 +292,7 @@ The table `schema_migrations` (file name and time) belongs to the migration runn
 ## API documentation
 
 Start the backend and open **http://localhost:3000/api/docs**. It is generated from
-[`backend/openapi.yaml`](backend/openapi.yaml), which describes all 37 endpoints. A test fails if a route is
+[`backend/openapi.yaml`](backend/openapi.yaml), which describes all 39 endpoints. A test fails if a route is
 added without documenting it. Log in first (`POST /api/auth/login`) and the browser sends the cookie.
 
 Conventions: money is an integer in paise (`*_cents`, 49900 = Rs 499.00); the UI shows rupees. Resource fields use the
@@ -302,7 +311,7 @@ migrations on it (`src/db/createTestDb.js`), so they never touch your demo data.
 database, so they run one after another. The frontend has no automated tests; check it with
 `cd frontend && npm run build` and by using the app.
 
-Result of the last run (`Test Files 20 passed (20), Tests 237 passed (237)`):
+Result of the last run (`Test Files 21 passed (21), Tests 248 passed (248)`):
 
 | Test file | Passed |
 |---|---|
@@ -318,6 +327,7 @@ Result of the last run (`Test Files 20 passed (20), Tests 237 passed (237)`):
 | `tests/api/health.test.js` | 2 / 2 |
 | `tests/api/idempotency.test.js` | 4 / 4 |
 | `tests/api/orders.test.js` | 7 / 7 |
+| `tests/api/passwordReset.test.js` | 11 / 11 |
 | `tests/api/payment.test.js` | 8 / 8 |
 | `tests/api/rateLimit.test.js` | 2 / 2 |
 | `tests/api/rbac.test.js` | 53 / 53 |
@@ -371,7 +381,8 @@ current stock (checked in `cancel.test.js`).
 ## Known limitations
 
 - Payments are simulated. There is no real payment provider, no 3-D Secure, no refunds to a real card.
-- No email, no password reset, no email verification.
+- No real email. "Forgot password" works, but the reset link is written to the server log instead of being
+  emailed, because the project has no email service. There is no email verification either.
 - No image upload: product images are placeholder URLs from `placehold.co` and need internet access.
 - The audit log is not tamper-proof: anyone with database access can change rows. There is no hash chain.
 - Logging out clears the cookie, but a stolen token stays valid until it expires (7 days). There are no refresh tokens
